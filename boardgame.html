@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="" media="screen"/>
+<style>
+ *, *::after, *::before{
+box-sizing:border-box;
+} 
+
+body{
+margin:0;
+
+}
+
+:root{
+--cell-size:100px;
+--mark-size:calc(var(--cell-size)*.9);
+}
+
+.Board{
+width:100vw;
+height:100vh;
+display:grid;
+justify-content:center;
+align-content:center;
+justify-items:center;
+align-items:center;
+
+grid-template-columns:repeat(3,auto);
+}
+
+.cell{
+width: var(--cell-size);
+height:var(--cell-size);
+border: 1px solid black;
+background-color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+position:relative;
+cursor:pointer
+}
+
+.cell:first-child,
+.cell:nth-child(2),
+.cell:nth-child(3){
+border-top:none;
+}
+
+.cell:last-child,
+.cell:nth-child(7),
+.cell:nth-child(8){
+border-bottom:none
+}
+
+.cell:nth-child(3n+1){
+border-left:none;
+}
+
+.cell:nth-child(3n+3){
+border-right:none;
+}
+
+.cell.x,
+.cell.circle{
+cursor:not-allowed
+}
+
+.cell.x::before,
+.cell.x::after{
+background-color:red;
+}
+.cell.circle::before,
+.cell.circle::after{
+background-color:black;
+}
+
+
+
+
+
+
+
+.Board.x .cell:not(.x):not(.circle):hover::before,
+.Board.x .cell:not(.x):not(.circle):hover::after,
+.Board.circle .cell:not(.x):not(.circle):hover::before{
+background-color:lightgrey;
+}
+ 
+.cell.x::before,
+.cell.x::after,
+.Board.x .cell:not(.x):not(.circle):hover::before,
+.Board.x .cell:not(.x):not(.circle):hover::after{
+ content:"";
+ position:absolute;
+ width:calc(var(--mark-size)*.15);
+ height:var(--mark-size);
+ 
+}
+
+.cell.x::before,
+.Board.x .cell:not(.x):not(.circle):hover::before{
+transform: rotate(45deg);
+}
+
+.cell.x::after,
+.Board.x .cell:not(.x):not(.circle):hover::after{
+transform:rotate(-45deg);
+}
+
+
+  
+  .cell.circle::before,
+.cell.circle::after,
+.Board.circle .cell:not(.x):not(.circle):hover::before,
+.Board.circle .cell:not(.x):not(.circle):hover::after{
+ content:"";
+ position:absolute;
+ border-radius:50%;
+ 
+}
+
+.cell.circle::before,
+.Board.circle .cell:not(.x):not(.circle):hover::before{
+width:var(--mark-size);
+ height:var(--mark-size);
+}
+
+.cell.circle::after,
+.Board.circle .cell:not(.x):not(.circle):hover::after{
+width:calc(var(--mark-size)*.8);
+height:calc(var(--mark-size)*.8);
+background-color:white
+}
+
+
+.winnermessage{
+display:none;
+position:fixed;
+top:0px;
+left:0;
+bottom:0;
+right:0;
+background-color:rgba(0,0,0,.9);
+justify-content:center;
+align-items:center;
+color:white;
+font-size:70px;
+flex-direction:column;
+}
+
+.winnermessage button{
+
+font-size:50px;
+background-color:white;
+border:1px solid black;
+padding:.30px .50px;
+cursor:pointer;
+}
+
+
+.winnermessage button:hover{
+background-color:black;
+color:white;
+border-color:white;
+}
+
+.winnermessage.display{
+display:flex;
+}
+</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>TicTacToe Game</title>
+</head>
+<body>
+<div class = "Board" id = "board">
+<div class = "cell" data-cell></div>
+<div class = "cell" data-cell></div>
+<div class = "cell" data-cell></div>
+<div class = "cell" data-cell></div>
+<div class = "cell" data-cell></div>
+<div class = "cell" data-cell></div>
+<div class = "cell" data-cell></div>
+<div class = "cell" data-cell></div>
+<div class = "cell" data-cell></div>
+</div>
+<div class = "winnermessage " id = "winnersmessage">
+<div data-winners-message-text> X has won!</div>
+<button id = "Restart"> Replay</button>
+</div> 
+
+<script>
+const X_CLASS = "x"
+const CIRCLE_CLASS = "circle"
+const winningcombos = [
+[0,1,2],
+[3,4,5],
+[0,3,6],
+[1,4,7],
+[2,5,8],
+[0,4,8],
+[6,7,8],
+[2,4,6],
+
+]
+const Board = document.getElementById("board")
+const cellElements = document.querySelectorAll("[data-cell]")
+const winningMessageElement = document.getElementById("winnersmessage")
+const winningmessageTextElement = document.querySelector("[data-winners-message-text]")
+const ReplayButton= document.getElementById("Restart");
+let circleturn;
+
+GameStart()
+
+ReplayButton.addEventListener("click", GameStart)
+
+function GameStart(){
+circleturn = false;
+cellElements.forEach(cell => {
+cell.classList.remove(X_CLASS)
+cell.classList.remove(CIRCLE_CLASS)
+cell.removeEventListener("click",handleClick)
+cell.addEventListener("click", handleClick,{ once: true})// so you only fire the event listener once
+})
+HoverEffectClass()
+winningMessageElement.classList.remove("display");
+}
+
+
+function handleClick(e){
+const cell = e.target
+const currentClass = circleturn ? CIRCLE_CLASS : X_CLASS
+placeMark(cell,currentClass)
+
+if (winner(currentClass)){
+endGame(false)
+}else if(isTie()){
+endGame(true)
+}else{
+changeturns()
+HoverEffectClass()
+}
+
+// check for win
+//check for Cats game
+//switch turns
+
+
+}
+
+function endGame(Tie){
+if(Tie){
+winningmessageTextElement.innerText = "Cats game!"
+}else{
+winningmessageTextElement.innerText = `${circleturn ? "O's" :"X's"} Has won!`
+}
+winningMessageElement.classList.add("display")
+}
+
+function isTie(){
+return [...cellElements].every(cell => {
+return cell.classList.contains(X_CLASS)||cell.classList.contains(CIRCLE_CLASS)
+})
+ 
+}
+
+function placeMark(cell,currentClass){
+cell.classList.add(currentClass)
+}
+function changeturns(){
+circleturn = !circleturn
+}
+
+function HoverEffectClass(){
+Board.classList.remove(X_CLASS)
+Board.classList.remove(CIRCLE_CLASS)
+if (circleturn){
+Board.classList.add(CIRCLE_CLASS)
+}else{
+Board.classList.add(X_CLASS)
+}
+
+}
+
+function winner(currentClass){
+return winningcombos.some(combination=>{
+return combination.every(index =>{
+return cellElements[index].classList.contains(currentClass)
+})
+})
+}
+</script>
+<script type="text/javascript" src=""></script>
+</body>
+</html>
+
+
+
+
+
+
+
